@@ -32,8 +32,6 @@ def test_navigation_menu_content_switch(page: Page):
         button_text = button.inner_text()
         
         button.click()
-        # Wait for the main content to change
-        page.wait_for_timeout(500) 
         
         new_content = main_content.inner_text()
         print(new_content)

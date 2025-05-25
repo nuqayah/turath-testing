@@ -24,7 +24,7 @@ def test_search_functionality(page: Page):
     
     # Get all child elements of the .viewport container
     child_viewports = page.locator(".viewport > *").first
-    # print(child_viewports.count())
+    
     for i in range(min(10, child_viewports.count())):
         child = child_viewports.nth(i)
         print(child.text_content())

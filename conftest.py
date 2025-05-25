@@ -1,5 +1,5 @@
 import pytest
-from playwright.sync_api import sync_playwright, Page, Browser, BrowserContext
+from playwright.sync_api import sync_playwright,  Browser
 
 @pytest.fixture(scope="session")
 def browser():
@@ -10,16 +10,11 @@ def browser():
         browser.close()
 
 @pytest.fixture(scope="function")
-def context(browser: Browser):
-    """Create a new browser context for each test."""
-    context = browser.new_context()
-    yield context
-    context.close()
-
-@pytest.fixture(scope="function")
-def page(context: BrowserContext):
+def page(browser: Browser):
     """Create a new page for each test."""
+    context = browser.new_context()
     page = context.new_page()
     page.goto("https://app.turath.io/")
     yield page
     page.close()
+    context.close()
