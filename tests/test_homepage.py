@@ -1,5 +1,4 @@
 import re
-import pytest
 from playwright.sync_api import Page, expect
 
 def test_homepage_title(page: Page):
@@ -29,3 +28,13 @@ def test_search_functionality(page: Page):
         child = child_viewports.nth(i)
         print(child.text_content())
         expect(child).to_contain_text(re.compile(r"\w*تراث\w*"))
+        
+
+def test_book_navigation(page: Page):
+    """Test the book navigation functionality."""
+    # Click on the first book link
+    first_book_link = page.locator(".viewport a").first
+    first_book_link.click()
+    
+    #check if the URL has changed to the book page
+    expect(page).to_have_url(re.compile(r".*/book/\d+"))
