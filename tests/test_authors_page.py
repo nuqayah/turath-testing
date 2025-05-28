@@ -31,7 +31,17 @@ def test_author_navigation(page: Page):
     page.wait_for_url(re.compile(r".*/author/\d+"))
     expect(page).to_have_url(re.compile(r".*/author/\d+"))
     
-    #Check if the author name is displayed on the page
-    assert page.get_by_role("link", name=first_author_name).count() > 0, f"Author link '{first_author_name}' is not visible"
+    #Get the results info
+    results_info = page.locator('.book-item:visible .info > div > a[href*="author"]')
+    
+    # Wait for at least one result to be visible to ensure DOM is ready
+    results_info.first.wait_for(state="visible")
+    
+    # Check if the results contain the expected author name
+    if results_info.count() > 0 and first_author_name:
+        cleaned_first_author_name = first_author_name.split(')')[0]  
+        for i in range(results_info.count()):
+            result = results_info.nth(i)
+            expect(result).to_contain_text(re.compile(rf"\w*{re.escape(cleaned_first_author_name)}\w*"))
 
     
