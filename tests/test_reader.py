@@ -22,7 +22,9 @@ def test_book_page(page: Page):
     expect(page.get_by_role("button", name="السجل")).to_be_visible()
     
     # Check if the book has pages
-    assert page.locator(".viewport > .page").count() > 0, "No pages found in the book"
+    pages = page.locator(".viewport > .page")
+    pages.first.wait_for(state="visible")
+    assert pages.count() > 0, "No pages found in the book"
     
 def test_toc_search(page: Page):
     """Test that the table of contents is visible and contains items."""
