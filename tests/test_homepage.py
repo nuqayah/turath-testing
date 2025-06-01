@@ -26,7 +26,6 @@ def test_search_functionality(page: Page):
     
     for i in range(min(10, child_viewports.count())):
         child = child_viewports.nth(i)
-        print(child.text_content())
         expect(child).to_contain_text(re.compile(r"\w*تراث\w*"))
         
 

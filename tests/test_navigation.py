@@ -1,4 +1,3 @@
-import pytest
 from playwright.sync_api import Page, expect
 
 def test_navigation_menu_visible(page: Page):
@@ -34,7 +33,6 @@ def test_navigation_menu_content_switch(page: Page):
         button.click()
         
         new_content = main_content.inner_text()
-        print(new_content)
         # The content should change after clicking a navigation button
         assert new_content != initial_content, f"Content did not change after clicking '{button_text}'"
         
