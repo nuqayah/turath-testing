@@ -1,7 +1,6 @@
-import pytest
-from playwright.sync_api import expect
+from playwright.sync_api import Page, expect
 
-def test_project_section_visibility(page, base_url):
+def test_project_section_visibility(page: Page, base_url: str):
     """Test that the projects section is visible and contains expected content."""
     page.goto(base_url)
     
@@ -28,7 +27,7 @@ def test_project_section_visibility(page, base_url):
         project_element = page.get_by_text(project)
         expect(project_element).to_be_visible()
 
-def test_project_cards_interaction(page, base_url):
+def test_project_cards_interaction(page: Page, base_url: str):
     """Test that project cards are interactive and contain expected elements."""
     page.goto(base_url)
     
@@ -50,4 +49,4 @@ def test_project_cards_interaction(page, base_url):
         
         # Check if project has a description
         project_description = project_card.locator("xpath=..").get_by_role("paragraph")
-        expect(project_description).to_be_visible() 
+        expect(project_description).to_be_visible()

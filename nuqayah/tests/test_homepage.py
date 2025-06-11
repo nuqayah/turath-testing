@@ -1,13 +1,13 @@
-import pytest,re
-from playwright.sync_api import expect
+import re
+from playwright.sync_api import Page, expect
 
-def test_homepage_logo(page, base_url):
+def test_homepage_logo(page: Page, base_url: str):
     """Test that the homepage loads with the logo."""
     page.goto(base_url)
     # Check if main logo is visible
     expect(page.locator("#logo-img")).to_be_visible()
 
-def test_homepage_projects(page,base_url):
+def test_homepage_projects(page: Page, base_url: str):
     """Test that the homepage projects load properly"""
     
     #check if the projects are visible
@@ -22,7 +22,7 @@ def test_homepage_projects(page,base_url):
         page.goto(base_url)
         
     
-def test_homepage_donations(page, base_url):
+def test_homepage_donations(page: Page):
     """Test that the homepage donations section loads properly"""
     
     # Check if the donations section is visible
@@ -33,7 +33,7 @@ def test_homepage_donations(page, base_url):
     assert donation_options.count() > 0, "No donation options are available"
     
         
-def test_homepage_footer(page, base_url):
+def test_homepage_footer(page: Page, base_url: str):
     """Test that the homepage footer loads properly"""
     
     # Check if the footer is visible
@@ -52,5 +52,4 @@ def test_homepage_footer(page, base_url):
     #     page.wait_for_load_state('networkidle')
     #     expect(page).to_have_url(re.compile(rf"^{re.escape(base_url)}(/.+)?$"))
     #     page.goto(base_url)
-    
-    
+

@@ -1,5 +1,4 @@
-import pytest
-from playwright.sync_api import expect
+from playwright.sync_api import Page, expect
 
 nav_links = {
     "عن نقاية": "/about",
@@ -14,7 +13,7 @@ nav_buttons = [
     "افتح القائمة الرئيسية"
 ]
 
-def test_navigation_links(page, base_url):
+def test_navigation_links(page: Page, base_url: str):
     """Test that main navigation links are present and clickable."""
     page.goto(base_url)
     # Check for main navigation links
@@ -26,7 +25,7 @@ def test_navigation_links(page, base_url):
     for button_text in nav_buttons:
         expect(page.get_by_role("button", name=button_text)).to_be_visible()
 
-def test_links_interaction(page, base_url):
+def test_links_interaction(page: Page, base_url: str):
     """Test that navigation menu items are clickable and lead to correct pages."""
     # Test clicking on each navigation link
     for link_text, expected_path in nav_links.items():
@@ -36,7 +35,7 @@ def test_links_interaction(page, base_url):
             expect(page).to_have_url(f"{base_url}{expected_path}")
             page.go_back() 
 
-def test_buttons_interaction(page):
+def test_buttons_interaction(page: Page):
     """Test that navigation buttons are present and clickable."""
     
     page.get_by_role("button", name="المشاريع").click()

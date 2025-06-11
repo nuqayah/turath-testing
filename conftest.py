@@ -1,8 +1,9 @@
 import pytest
-from playwright.sync_api import sync_playwright, Browser
-# from playwright.async_api import async_playwright
+from playwright.sync_api import sync_playwright, Browser, Page
+from _pytest.config.argparsing import Parser
+from _pytest.fixtures import SubRequest
 
-def pytest_addoption(parser):
+def pytest_addoption(parser: Parser):
     """Add command line options for website selection."""
     #pytest --website=<website_name(nuqayah or turath)>
     parser.addoption(
@@ -13,9 +14,9 @@ def pytest_addoption(parser):
     )
 
 @pytest.fixture(scope="session")
-def base_url(request):
+def base_url(request: SubRequest):
     """Return the base URL for the selected website."""
-    website = request.config.getoption("--website")
+    website = str(request.config.getoption("--website"))
     urls = {
         "nuqayah": "https://nuqayah.com",
         "turath": "https://app.turath.io"
@@ -40,7 +41,7 @@ def page(browser: Browser):
     page.close()
 
 @pytest.fixture(autouse=True)
-def navigate_to_base_url(page, base_url):
+def navigate_to_base_url(page: Page, base_url: str):
     """Automatically navigate to base URL after each test."""
     yield
     page.goto(base_url)
