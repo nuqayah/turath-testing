@@ -17,10 +17,9 @@ def test_navigation_links(page: Page, base_url: str):
     """Test that main navigation links are present and clickable."""
     page.goto(base_url)
     # Check for main navigation links
-    for link_text, expected_path in nav_links.items():
+    for link_text, _ in nav_links.items():
         link = page.get_by_role("banner").get_by_role("link", name=link_text)
-        expect(link).to_be_visible()
-        
+        expect(link).to_be_visible()        
     # Check for main navigation buttons
     for button_text in nav_buttons:
         expect(page.get_by_role("button", name=button_text)).to_be_visible()
