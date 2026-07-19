@@ -33,7 +33,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: book-pm-tightening-i23-d52-${{ steps.metadata.outputs.sha256 }}
+          name: book-pm-tightening-i19-d36-${{ steps.metadata.outputs.sha256 }}
           path: |
             rukn-ui-a67752272-book-pm-foundational-tightening.patch
             patch-check.log
