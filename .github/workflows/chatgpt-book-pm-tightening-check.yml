@@ -45,4 +45,4 @@ jobs:
       - name: Assert tightened representation
         run: |
           ! grep -R "data-book-asset" client/editor/books/book-pm-model.js client/editor/books/book-pm-schema.js
-          ! grep -R "unknown_book_pm_document_invariant" books/pm_schema.py client/editor/books/book-pm-model.js
+          ! grep -R "def _parse_int" books/pm_schema.py
