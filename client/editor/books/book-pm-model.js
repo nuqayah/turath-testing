@@ -18,9 +18,9 @@ function assert_book_pm_contract(root, invariants) {
     const pending = [root]
     while (pending.length) {
         const node = pending.pop()
-        assert_book_pm_attrs(wire_identity.nodes[node.type.name]?.attrs || {}, node.attrs)
+        assert_book_pm_attrs(wire_identity.nodes[node.type.name].attrs || {}, node.attrs)
         for (const mark of node.marks) {
-            assert_book_pm_attrs(wire_identity.marks[mark.type.name]?.attrs || {}, mark.attrs)
+            assert_book_pm_attrs(wire_identity.marks[mark.type.name].attrs || {}, mark.attrs)
         }
         invariants.forEach((invariant, index) => {
             if (node.type.name !== invariant.node) return
