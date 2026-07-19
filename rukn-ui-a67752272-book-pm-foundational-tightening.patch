@@ -1,17 +1,20 @@
 diff --git a/books/pm_schema.py b/books/pm_schema.py
 --- a/books/pm_schema.py
 +++ b/books/pm_schema.py
-@@ -186,3 +186,3 @@ def book_page_marker_node(
+@@ -26,43 +26,35 @@ def book_page_marker_node(
+         'nonAuthor': non_author,
          'services': list(services or []),
      }
 -    _validate_book_pm_contract_attrs('nodes', 'bookPageMarker', attrs)
 +    _validate_book_pm_contract_attrs(BOOK_PM_NODE_ATTR_SPECS['bookPageMarker'], attrs)
      return {'type': 'bookPageMarker', 'attrs': attrs}
-@@ -223,2 +223,2 @@ def canonicalize_book_pm_text(text: str | None) -> str:
+ 
+ 
  def canonicalize_book_pm_text(text: str | None) -> str:
 -    return live_book_pm_envelope(parse_book_pm_envelope(text)['doc'])
 +    return _book_pm_envelope(parse_book_pm_envelope(text)['doc'])
-@@ -317,8 +317,4 @@ def _same_json_value(left: Any, right: Any) -> bool:
+ 
+ 
  def _same_json_value(left: Any, right: Any) -> bool:
 -    if type(left) is not type(right):
 -        return False
@@ -23,19 +26,23 @@ diff --git a/books/pm_schema.py b/books/pm_schema.py
 +    return orjson.dumps(left, option=orjson.OPT_SORT_KEYS) == orjson.dumps(
 +        right, option=orjson.OPT_SORT_KEYS
 +    )
-@@ -367,4 +363,3 @@ def legacy_volume_text_from_book_pm_doc(doc_json: dict[str, Any]) -> str:
+ 
+ 
  def legacy_volume_text_from_book_pm_doc(doc_json: dict[str, Any]) -> str:
 -    doc = validate_live_book_pm_doc(doc_json)
      pages: list[str] = []
 -    for marker, blocks in iter_book_pm_page_segments(doc):
 +    for marker, blocks in iter_book_pm_page_segments(doc_json):
-@@ -1439,5 +1434,2 @@ def _validate_book_pm_contract_doc(doc: dict[str, Any]) -> None:
+         pages.append(str((marker, blocks)))
+     return ''.join(pages)
+ 
+ 
  def _validate_book_pm_contract_doc(doc: dict[str, Any]) -> None:
 -    for invariant in BOOK_PM_DOCUMENT_INVARIANTS:
 -        if invariant.get('kind') != 'unique_node_attr':
 -            raise RuntimeError('unknown_book_pm_document_invariant')
      unique_values = [set() for _ in BOOK_PM_DOCUMENT_INVARIANTS]
-@@ -1447,7 +1439,7 @@ def _validate_book_pm_contract_doc(doc: dict[str, Any]) -> None:
+ 
      for node in _iter_book_pm_nodes(doc):
          node_type = node['type']
 -        _validate_book_pm_contract_attrs('nodes', node_type, node.get('attrs') or {})
@@ -44,12 +51,21 @@ diff --git a/books/pm_schema.py b/books/pm_schema.py
 -            _validate_book_pm_contract_attrs('marks', mark['type'], mark.get('attrs') or {})
 +            _validate_book_pm_contract_attrs(BOOK_PM_MARK_ATTR_SPECS[mark['type']], mark.get('attrs') or {})
          for invariant, seen in zip(BOOK_PM_DOCUMENT_INVARIANTS, unique_values, strict=True):
-@@ -1552,3 +1544,2 @@ def _validate_book_pm_contract_attrs(owner: str, name: str, attrs: dict[str, Any]) -> None:
+             if node_type != invariant['node']:
+                 continue
+@@ -72,8 +64,7 @@ def _validate_book_pm_contract_doc(doc: dict[str, Any]) -> None:
+             seen.add(value)
+ 
+ 
 -def _validate_book_pm_contract_attrs(owner: str, name: str, attrs: dict[str, Any]) -> None:
 -    specs = (BOOK_PM_NODE_ATTR_SPECS if owner == 'nodes' else BOOK_PM_MARK_ATTR_SPECS).get(name, {})
 +def _validate_book_pm_contract_attrs(specs: dict[str, Any], attrs: dict[str, Any]) -> None:
      if set(attrs) != set(specs):
-@@ -1697,10 +1688,6 @@ def book_printed_page_number(value: Any) -> int | None:
+         raise ValueError('noncanonical_pm_doc')
+ 
+@@ -83,11 +74,7 @@ def _clean_page_raw(value: str) -> str:
+ 
+ 
  def book_printed_page_number(value: Any) -> int | None:
 -    return _parse_int(value if isinstance(value, str) else None)
 -
@@ -59,10 +75,11 @@ diff --git a/books/pm_schema.py b/books/pm_schema.py
 +    cleaned = _clean_page_raw(value if isinstance(value, str) else '')
      if not re.fullmatch(r'[0-9]+', cleaned):
          return None
+     parsed = int(cleaned)
 diff --git a/client/editor/books/book-pm-model.js b/client/editor/books/book-pm-model.js
 --- a/client/editor/books/book-pm-model.js
 +++ b/client/editor/books/book-pm-model.js
-@@ -81,17 +81,12 @@ export function assert_book_pm_document_contract(doc) {
+@@ -9,18 +9,13 @@ export function assert_book_pm_document_contract(doc) {
  }
  
  function assert_book_pm_contract(root, invariants) {
@@ -82,7 +99,9 @@ diff --git a/client/editor/books/book-pm-model.js b/client/editor/books/book-pm-
 -            assert_book_pm_attrs('marks', mark.type.name, mark.attrs)
 +            assert_book_pm_attrs(wire_identity.marks[mark.type.name]?.attrs || {}, mark.attrs)
          }
-@@ -107,8 +102,7 @@ function assert_book_pm_contract(root, invariants) {
+         invariants.forEach((invariant, index) => {
+             if (node.type.name !== invariant.node) return
+@@ -34,8 +29,7 @@ function assert_book_pm_contract(root, invariants) {
      }
  }
  
@@ -91,8 +110,9 @@ diff --git a/client/editor/books/book-pm-model.js b/client/editor/books/book-pm-
 +function assert_book_pm_attrs(specs, attrs) {
      if (Object.keys(attrs).length !== Object.keys(specs).length) {
          throw new RangeError('noncanonical_pm_doc')
-@@ -173,22 +167,12 @@ function normalize_book_url(value, policy_name) {
-     return book_pm_policy_accepts(policy_name, normalized) ? normalized : null
+     }
+@@ -49,26 +43,15 @@ function book_url_path(value) {
+     return value.split(/[?#]/, 1)[0]
  }
  
 -export function book_image_source_from_dom(src_value, declared_hash = null) {
@@ -122,10 +142,31 @@ diff --git a/client/editor/books/book-pm-model.js b/client/editor/books/book-pm-
 +    if (source?.kind === 'asset') return {src: `/api/books/book-assets/${source.hash}/`}
      return source?.kind === 'url' ? {src: source.url} : {}
  }
+diff --git a/client/editor/books/book-pm-model.test.js b/client/editor/books/book-pm-model.test.js
+--- a/client/editor/books/book-pm-model.test.js
++++ b/client/editor/books/book-pm-model.test.js
+@@ -8,6 +8,7 @@ import {
+     assert_book_pm_document_contract,
+     assert_book_pm_node_contract,
+     book_pm_attr_specs,
++    book_image_dom_attrs,
+     book_pm_blocked_response_facts,
+     book_image_source_from_dom,
+     book_link_attrs_from_dom,
+@@ -29,6 +30,9 @@ test('Book PM constructors produce only canonical attribute values', () => {
+         kind: 'asset',
+         hash: 'a'.repeat(40),
+     })
++    assert.deepEqual(book_image_dom_attrs({kind: 'asset', hash: 'a'.repeat(40)}), {
++        src: `/api/books/book-assets/${'a'.repeat(40)}/`,
++    })
+     assert.equal(
+         book_image_source_from_dom(
+             'https://example.com/api/books/book-assets/' + 'a'.repeat(40) + '/',
 diff --git a/client/editor/books/book-pm-schema.js b/client/editor/books/book-pm-schema.js
 --- a/client/editor/books/book-pm-schema.js
 +++ b/client/editor/books/book-pm-schema.js
-@@ -385,10 +385,7 @@ function define_book_image() {
+@@ -8,10 +8,7 @@ function define_book_image() {
              {
                  tag: 'img',
                  getAttrs: dom => {
@@ -136,23 +177,4 @@ diff --git a/client/editor/books/book-pm-schema.js b/client/editor/books/book-pm
 +                    const source = book_image_source_from_dom(dom.getAttribute('src'))
                      if (!source) return false
                      return {
-diff --git a/client/editor/books/book-pm-model.test.js b/client/editor/books/book-pm-model.test.js
---- a/client/editor/books/book-pm-model.test.js
-+++ b/client/editor/books/book-pm-model.test.js
-@@ -9,6 +9,7 @@ import {
-     assert_book_pm_document_contract,
-     assert_book_pm_node_contract,
-     book_pm_attr_specs,
-+    book_image_dom_attrs,
-     book_pm_blocked_response_facts,
-     book_image_source_from_dom,
-@@ -91,6 +92,11 @@ test('Book PM constructors produce only canonical attribute values', () => {
-         kind: 'asset',
-         hash: 'a'.repeat(40),
-     })
-+    assert.deepEqual(book_image_dom_attrs({kind: 'asset', hash: 'a'.repeat(40)}), {
-+        src: `/api/books/book-assets/${'a'.repeat(40)}/`,
-+    })
-     assert.equal(
-         book_image_source_from_dom(
-             'https://example.com/api/books/book-assets/' + 'a'.repeat(40) + '/',
+                         source,
