@@ -1,7 +1,7 @@
 diff --git a/books/pm_schema.py b/books/pm_schema.py
 --- a/books/pm_schema.py
 +++ b/books/pm_schema.py
-@@ -26,43 +26,35 @@ def book_page_marker_node(
+@@ -26,12 +26,12 @@ def book_page_marker_node(
          'nonAuthor': non_author,
          'services': list(services or []),
      }
@@ -16,16 +16,7 @@ diff --git a/books/pm_schema.py b/books/pm_schema.py
  
  
  def _same_json_value(left: Any, right: Any) -> bool:
--    if type(left) is not type(right):
--        return False
--    if isinstance(left, dict):
--        return left.keys() == right.keys() and all(_same_json_value(left[key], right[key]) for key in left)
--    if isinstance(left, list):
--        return len(left) == len(right) and all(_same_json_value(a, b) for a, b in zip(left, right, strict=True))
--    return left == right
-+    return orjson.dumps(left, option=orjson.OPT_SORT_KEYS) == orjson.dumps(
-+        right, option=orjson.OPT_SORT_KEYS
-+    )
+@@ -45,9 +45,8 @@ def _same_json_value(left: Any, right: Any) -> bool:
  
  
  def legacy_volume_text_from_book_pm_doc(doc_json: dict[str, Any]) -> str:
@@ -36,12 +27,7 @@ diff --git a/books/pm_schema.py b/books/pm_schema.py
          pages.append(str((marker, blocks)))
      return ''.join(pages)
  
- 
- def _validate_book_pm_contract_doc(doc: dict[str, Any]) -> None:
--    for invariant in BOOK_PM_DOCUMENT_INVARIANTS:
--        if invariant.get('kind') != 'unique_node_attr':
--            raise RuntimeError('unknown_book_pm_document_invariant')
-     unique_values = [set() for _ in BOOK_PM_DOCUMENT_INVARIANTS]
+@@ -60,9 +59,9 @@ def _validate_book_pm_contract_doc(doc: dict[str, Any]) -> None:
  
      for node in _iter_book_pm_nodes(doc):
          node_type = node['type']
@@ -53,7 +39,7 @@ diff --git a/books/pm_schema.py b/books/pm_schema.py
          for invariant, seen in zip(BOOK_PM_DOCUMENT_INVARIANTS, unique_values, strict=True):
              if node_type != invariant['node']:
                  continue
-@@ -72,8 +64,7 @@ def _validate_book_pm_contract_doc(doc: dict[str, Any]) -> None:
+@@ -72,8 +71,7 @@ def _validate_book_pm_contract_doc(doc: dict[str, Any]) -> None:
              seen.add(value)
  
  
@@ -63,7 +49,7 @@ diff --git a/books/pm_schema.py b/books/pm_schema.py
      if set(attrs) != set(specs):
          raise ValueError('noncanonical_pm_doc')
  
-@@ -83,11 +74,7 @@ def _clean_page_raw(value: str) -> str:
+@@ -83,11 +81,7 @@ def _clean_page_raw(value: str) -> str:
  
  
  def book_printed_page_number(value: Any) -> int | None:
@@ -79,17 +65,7 @@ diff --git a/books/pm_schema.py b/books/pm_schema.py
 diff --git a/client/editor/books/book-pm-model.js b/client/editor/books/book-pm-model.js
 --- a/client/editor/books/book-pm-model.js
 +++ b/client/editor/books/book-pm-model.js
-@@ -9,18 +9,13 @@ export function assert_book_pm_document_contract(doc) {
- }
- 
- function assert_book_pm_contract(root, invariants) {
--    const unique_values = invariants.map(invariant => {
--        if (invariant.kind !== 'unique_node_attr') {
--            throw new Error('unknown_book_pm_document_invariant')
--        }
--        return new Set()
--    })
-+    const unique_values = invariants.map(() => new Set())
+@@ -18,9 +18,9 @@ function assert_book_pm_contract(root, invariants) {
      const pending = [root]
      while (pending.length) {
          const node = pending.pop()
@@ -101,7 +77,7 @@ diff --git a/client/editor/books/book-pm-model.js b/client/editor/books/book-pm-
          }
          invariants.forEach((invariant, index) => {
              if (node.type.name !== invariant.node) return
-@@ -34,8 +29,7 @@ function assert_book_pm_contract(root, invariants) {
+@@ -34,8 +34,7 @@ function assert_book_pm_contract(root, invariants) {
      }
  }
  
@@ -111,7 +87,7 @@ diff --git a/client/editor/books/book-pm-model.js b/client/editor/books/book-pm-
      if (Object.keys(attrs).length !== Object.keys(specs).length) {
          throw new RangeError('noncanonical_pm_doc')
      }
-@@ -49,26 +43,15 @@ function book_url_path(value) {
+@@ -49,26 +48,15 @@ function book_url_path(value) {
      return value.split(/[?#]/, 1)[0]
  }
  
