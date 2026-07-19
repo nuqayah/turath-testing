@@ -11,11 +11,31 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          show-progress: false
       - name: Check and apply patch
+        id: patch
+        continue-on-error: true
         run: |
-          git apply --check rukn-ui-a67752272-book-pm-foundational-tightening.patch
-          git apply rukn-ui-a67752272-book-pm-foundational-tightening.patch
-          git diff --check
+          set -o pipefail
+          {
+            git apply --check rukn-ui-a67752272-book-pm-foundational-tightening.patch
+            git apply rukn-ui-a67752272-book-pm-foundational-tightening.patch
+            git diff --check
+            git diff --numstat
+            git diff --shortstat
+            sha256sum rukn-ui-a67752272-book-pm-foundational-tightening.patch
+          } > patch-check.log 2>&1
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: book-pm-tightening-check
+          path: patch-check.log
+      - name: Fail on patch error
+        if: steps.patch.outcome == 'failure'
+        run: |
+          cat patch-check.log
+          exit 1
       - name: Syntax checks
         run: |
           python -m py_compile books/pm_schema.py
