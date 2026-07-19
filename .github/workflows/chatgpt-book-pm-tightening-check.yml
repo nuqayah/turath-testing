@@ -1,0 +1,27 @@
+name: chatgpt-book-pm-tightening-check
+
+on:
+  push:
+    branches:
+      - chatgpt/book-pm-tightening-artifact
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check and apply patch
+        run: |
+          git apply --check rukn-ui-a67752272-book-pm-foundational-tightening.patch
+          git apply rukn-ui-a67752272-book-pm-foundational-tightening.patch
+          git diff --check
+      - name: Syntax checks
+        run: |
+          python -m py_compile books/pm_schema.py
+          node --check client/editor/books/book-pm-model.js
+          node --check client/editor/books/book-pm-schema.js
+          node --check client/editor/books/book-pm-model.test.js
+      - name: Assert tightened representation
+        run: |
+          ! grep -R "data-book-asset" client/editor/books/book-pm-model.js client/editor/books/book-pm-schema.js
+          ! grep -R "unknown_book_pm_document_invariant" books/pm_schema.py client/editor/books/book-pm-model.js
