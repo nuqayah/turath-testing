@@ -8,10 +8,7 @@ function define_book_image() {
             {
                 tag: 'img',
                 getAttrs: dom => {
-                    const source = book_image_source_from_dom(
-                        dom.getAttribute('src'),
-                        dom.getAttribute('data-book-asset'),
-                    )
+                    const source = book_image_source_from_dom(dom.getAttribute('src'))
                     if (!source) return false
                     return {
                         source,
