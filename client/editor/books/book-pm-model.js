@@ -9,7 +9,12 @@ export function assert_book_pm_document_contract(doc) {
 }
 
 function assert_book_pm_contract(root, invariants) {
-    const unique_values = invariants.map(() => new Set())
+    const unique_values = invariants.map(invariant => {
+        if (invariant.kind !== 'unique_node_attr') {
+            throw new Error('unknown_book_pm_document_invariant')
+        }
+        return new Set()
+    })
     const pending = [root]
     while (pending.length) {
         const node = pending.pop()
