@@ -35,9 +35,13 @@ def canonicalize_book_pm_text(text: str | None) -> str:
 
 
 def _same_json_value(left: Any, right: Any) -> bool:
-    return orjson.dumps(left, option=orjson.OPT_SORT_KEYS) == orjson.dumps(
-        right, option=orjson.OPT_SORT_KEYS
-    )
+    if type(left) is not type(right):
+        return False
+    if isinstance(left, dict):
+        return left.keys() == right.keys() and all(_same_json_value(left[key], right[key]) for key in left)
+    if isinstance(left, list):
+        return len(left) == len(right) and all(_same_json_value(a, b) for a, b in zip(left, right, strict=True))
+    return left == right
 
 
 def legacy_volume_text_from_book_pm_doc(doc_json: dict[str, Any]) -> str:
@@ -48,6 +52,9 @@ def legacy_volume_text_from_book_pm_doc(doc_json: dict[str, Any]) -> str:
 
 
 def _validate_book_pm_contract_doc(doc: dict[str, Any]) -> None:
+    for invariant in BOOK_PM_DOCUMENT_INVARIANTS:
+        if invariant.get('kind') != 'unique_node_attr':
+            raise RuntimeError('unknown_book_pm_document_invariant')
     unique_values = [set() for _ in BOOK_PM_DOCUMENT_INVARIANTS]
 
     for node in _iter_book_pm_nodes(doc):
