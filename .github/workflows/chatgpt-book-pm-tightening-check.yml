@@ -26,11 +26,17 @@ jobs:
             git diff --shortstat
             sha256sum rukn-ui-a67752272-book-pm-foundational-tightening.patch
           } > patch-check.log 2>&1
+      - name: Read patch checksum
+        id: metadata
+        run: |
+          echo "sha256=$(sha256sum rukn-ui-a67752272-book-pm-foundational-tightening.patch | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: book-pm-tightening-check
-          path: patch-check.log
+          name: book-pm-tightening-i23-d52-${{ steps.metadata.outputs.sha256 }}
+          path: |
+            rukn-ui-a67752272-book-pm-foundational-tightening.patch
+            patch-check.log
       - name: Fail on patch error
         if: steps.patch.outcome == 'failure'
         run: |
