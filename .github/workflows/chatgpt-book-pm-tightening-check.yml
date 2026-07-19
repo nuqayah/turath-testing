@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - chatgpt/book-pm-tightening-artifact
+  pull_request:
 
 jobs:
   check:
