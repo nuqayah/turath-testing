@@ -8,6 +8,7 @@ import {
     assert_book_pm_document_contract,
     assert_book_pm_node_contract,
     book_pm_attr_specs,
+    book_image_dom_attrs,
     book_pm_blocked_response_facts,
     book_image_source_from_dom,
     book_link_attrs_from_dom,
@@ -28,6 +29,9 @@ test('Book PM constructors produce only canonical attribute values', () => {
     assert.deepEqual(book_image_source_from_dom('/api/books/book-assets/' + 'a'.repeat(40) + '/'), {
         kind: 'asset',
         hash: 'a'.repeat(40),
+    })
+    assert.deepEqual(book_image_dom_attrs({kind: 'asset', hash: 'a'.repeat(40)}), {
+        src: `/api/books/book-assets/${'a'.repeat(40)}/`,
     })
     assert.equal(
         book_image_source_from_dom(
